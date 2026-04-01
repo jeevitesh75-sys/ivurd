@@ -396,16 +396,10 @@ def render_empty_state() -> None:
 
 
 
-def render_chat_input_box() -> str | None:
-    with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_area(
-            "Email context",
-            height=140,
-            placeholder=(
-                "Paste the email you received, explain the context, "
-                "or describe the reply you want..."
-            ),
-            label_visibility="collapsed",def render_chat_messages(messages):
+import streamlit.components.v1 as components
+import html
+
+def render_chat_messages(messages):
     for i, msg in enumerate(messages):
         role_label = "You" if msg["role"] == "user" else "IVURD"
         role_class = "chat-user" if msg["role"] == "user" else "chat-assistant"
@@ -420,19 +414,27 @@ def render_chat_input_box() -> str | None:
             unsafe_allow_html=True,
         )
 
-        # ✅ ADD COPY BUTTON ONLY FOR AI
+        # ✅ SAFE COPY BUTTON
         if msg["role"] == "assistant":
-            if st.button("📋 Copy", key=f"copy_{i}"):
-                st.session_state["copied_text"] = msg["content"]
-                st.success("Copied to clipboard! (paste manually)")
-        )
+            safe_text = html.escape(msg["content"])
 
-        submitted = st.form_submit_button("Send")
-        if submitted:
-            return user_input
-
-    return None
-
+            components.html(
+                f"""
+                <button onclick="navigator.clipboard.writeText('{safe_text}')"
+                style="
+                    background: #111;
+                    color: gold;
+                    border: 1px solid gold;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    margin-bottom: 15px;
+                ">
+                📋 Copy
+                </button>
+                """,
+                height=50,
+            )
 
 def render_message_actions() -> str | None:
     c1, c2, c3 = st.columns([1, 1, 4])
