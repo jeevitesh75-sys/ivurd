@@ -1,4 +1,6 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import html
 
 
 def render_ivurd_intro():
@@ -103,13 +105,14 @@ def render_ivurd_intro():
         """,
         unsafe_allow_html=True,
     )
-def apply_kintsugi_theme() -> None:
+
+
+def apply_kintsugi_theme():
     st.markdown(
         """
         <style>
         :root {
             --bg: #0b0b0b;
-            --panel: #111111;
             --gold: #d4af37;
             --gold-bright: #f5d97a;
             --text: #f5f1e8;
@@ -164,31 +167,11 @@ def apply_kintsugi_theme() -> None:
             overflow: hidden;
         }
 
-        .kintsugi-box::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 18px;
-            pointer-events: none;
-            background:
-                linear-gradient(
-                    115deg,
-                    transparent 0%,
-                    transparent 26%,
-                    rgba(212,175,55,0.06) 27%,
-                    rgba(212,175,55,0.18) 28%,
-                    transparent 29%,
-                    transparent 100%
-                );
-        }
-
         .chat-user {
-            background: linear-gradient(180deg, #171717, #111111);
             border-left: 3px solid var(--gold);
         }
 
         .chat-assistant {
-            background: linear-gradient(180deg, #111111, #0c0c0c);
             border-left: 3px solid #8c6f1a;
         }
 
@@ -235,44 +218,7 @@ def apply_kintsugi_theme() -> None:
             margin: 0.4rem 0 0.6rem 0;
         }
 
-        .splash-wrap {
-            position: relative;
-            height: 110px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .splash-logo {
-            font-size: 2.9rem;
-            font-weight: 900;
-            color: var(--gold);
-            letter-spacing: 0.12em;
-            animation: ivurdGlow 1.9s ease-in-out infinite alternate;
-            text-shadow:
-                0 0 10px rgba(212,175,55,0.45),
-                0 0 22px rgba(212,175,55,0.28);
-        }
-
-        @keyframes ivurdGlow {
-            0% {
-                transform: scale(0.96);
-                opacity: 0.84;
-                text-shadow: 0 0 6px rgba(212,175,55,0.25);
-            }
-            100% {
-                transform: scale(1.04);
-                opacity: 1;
-                text-shadow:
-                    0 0 10px rgba(212,175,55,0.50),
-                    0 0 24px rgba(212,175,55,0.35),
-                    0 0 42px rgba(212,175,55,0.18);
-            }
-        }
-
-        .stTextArea textarea, .stTextInput input {
+        .stTextArea textarea {
             background: #121212 !important;
             color: #f6f1e8 !important;
             border: 1px solid rgba(212,175,55,0.35) !important;
@@ -286,13 +232,6 @@ def apply_kintsugi_theme() -> None:
             border-radius: 12px !important;
         }
 
-        .stButton>button:hover {
-            border-color: rgba(212,175,55,0.75) !important;
-            box-shadow: 0 0 18px rgba(212,175,55,0.18);
-            color: #fff3c8 !important;
-            transform: translateY(-1px);
-        }
-
         .muted-note {
             color: var(--muted);
             font-size: 0.9rem;
@@ -304,18 +243,7 @@ def apply_kintsugi_theme() -> None:
     )
 
 
-def render_splash_screen() -> None:
-    st.markdown(
-        """
-        <div class="splash-wrap">
-            <div class="splash-logo">IVURD</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_header() -> None:
+def render_header():
     st.markdown(
         """
         <div class="ivurd-header">
@@ -367,7 +295,7 @@ def render_sidebar(chats, current_chat_id):
     return action
 
 
-def render_welcome_screen() -> None:
+def render_welcome_screen():
     st.markdown(
         """
         <div class="kintsugi-box welcome-card">
@@ -379,7 +307,7 @@ def render_welcome_screen() -> None:
     )
 
 
-def render_empty_state() -> None:
+def render_empty_state():
     st.markdown(
         """
         <div class="muted-note">
@@ -392,12 +320,6 @@ def render_empty_state() -> None:
         unsafe_allow_html=True,
     )
 
-
-
-
-
-import streamlit.components.v1 as components
-import html
 
 def render_chat_messages(messages):
     for i, msg in enumerate(messages):
@@ -414,21 +336,19 @@ def render_chat_messages(messages):
             unsafe_allow_html=True,
         )
 
-        # ✅ SAFE COPY BUTTON
         if msg["role"] == "assistant":
-            safe_text = html.escape(msg["content"])
-
+            safe_text = html.escape(msg["content"]).replace("\n", "\\n").replace("'", "\\'")
             components.html(
                 f"""
                 <button onclick="navigator.clipboard.writeText('{safe_text}')"
                 style="
-                    background: #111;
-                    color: gold;
-                    border: 1px solid gold;
-                    padding: 6px 12px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    margin-bottom: 15px;
+                    background:#111;
+                    color:gold;
+                    border:1px solid gold;
+                    padding:6px 12px;
+                    border-radius:8px;
+                    cursor:pointer;
+                    margin-bottom:15px;
                 ">
                 📋 Copy
                 </button>
@@ -436,7 +356,24 @@ def render_chat_messages(messages):
                 height=50,
             )
 
-def render_message_actions() -> str | None:
+
+def render_chat_input_box():
+    with st.form("chat_form", clear_on_submit=True):
+        user_input = st.text_area(
+            "Email context",
+            height=140,
+            placeholder="Paste the email you received, explain the context, or describe the reply you want...",
+            label_visibility="collapsed",
+        )
+
+        submitted = st.form_submit_button("Send")
+        if submitted:
+            return user_input
+
+    return None
+
+
+def render_message_actions():
     c1, c2, c3 = st.columns([1, 1, 4])
 
     with c1:
