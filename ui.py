@@ -393,8 +393,20 @@ def render_empty_state() -> None:
     )
 
 
-def render_chat_messages(messages: list[dict]) -> None:
-    for msg in messages:
+
+
+
+def render_chat_input_box() -> str | None:
+    with st.form("chat_form", clear_on_submit=True):
+        user_input = st.text_area(
+            "Email context",
+            height=140,
+            placeholder=(
+                "Paste the email you received, explain the context, "
+                "or describe the reply you want..."
+            ),
+            label_visibility="collapsed",def render_chat_messages(messages):
+    for i, msg in enumerate(messages):
         role_label = "You" if msg["role"] == "user" else "IVURD"
         role_class = "chat-user" if msg["role"] == "user" else "chat-assistant"
 
@@ -408,17 +420,11 @@ def render_chat_messages(messages: list[dict]) -> None:
             unsafe_allow_html=True,
         )
 
-
-def render_chat_input_box() -> str | None:
-    with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_area(
-            "Email context",
-            height=140,
-            placeholder=(
-                "Paste the email you received, explain the context, "
-                "or describe the reply you want..."
-            ),
-            label_visibility="collapsed",
+        # ✅ ADD COPY BUTTON ONLY FOR AI
+        if msg["role"] == "assistant":
+            if st.button("📋 Copy", key=f"copy_{i}"):
+                st.session_state["copied_text"] = msg["content"]
+                st.success("Copied to clipboard! (paste manually)")
         )
 
         submitted = st.form_submit_button("Send")
